@@ -5,10 +5,10 @@ from player import Player
 from computer import Computer
 
 class Game:
-    def __init__(self):
+    def __init__(self, starting_stack):
         self.evaluator = Evaluator()
-        self.player = Player(stack=1000) # start w 500bbs
-        self.computer = Computer(stack=1000)
+        self.player = Player(stack=starting_stack)
+        self.computer = Computer(stack=starting_stack)
 
     def play_hand(self):
         deck = Deck()
