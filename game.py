@@ -21,35 +21,42 @@ class Game:
 
         # preflop
         result, pot = BettingRound(self.player, self.computer).run()
-        if result == "player_fold": print("You folded"); return
-        if result == "computer_fold": print("Computer folded, you win"); return
+        if self.handle_fold(result, pot): return
 
         # flop
         board += deck.draw(3)
         print("\n--- FLOP ---")
         Card.print_pretty_cards(board)
         result, pot = BettingRound(self.player, self.computer).run()
-        if result == "player_fold": print("You folded"); return
-        if result == "computer_fold": print("Computer folded, you win"); return
+        if self.handle_fold(result, pot): return
 
         # turn
         board += deck.draw(1)
         print("\n--- TURN ---")
         Card.print_pretty_cards(board)
-        result = BettingRound(self.player, self.computer).run()
-        if result == "player_fold": print("You folded"); return
-        if result == "computer_fold": print("Computer folded, you win"); return
+        result, pot = BettingRound(self.player, self.computer).run()
+        if self.handle_fold(result, pot): return
 
         # river
         board += deck.draw(1)
         print("\n--- RIVER ---")
         Card.print_pretty_cards(board)
-        result = BettingRound(self.player, self.computer).run()
-        if result == "player_fold": print("You folded"); return
-        if result == "computer_fold": print("Computer folded, you win"); return
+        result, pot = BettingRound(self.player, self.computer).run()
+        if self.handle_fold(result, pot): return
 
         # showdown
         self.showdown(player_hand, computer_hand, board)
+
+    def handle_fold(self, result, pot):
+        if result == "player_fold":
+            self.computer.stack += pot
+            print("You folded, computer wins pot")
+            return True
+        if result == "computer_fold":
+            self.player.stack += pot
+            print("Computer folded, you win pot")
+            return True
+        return False
 
     def showdown(self, player_hand, computer_hand, board):
         evaluator = Evaluator()
