@@ -11,6 +11,7 @@ class Game:
     def play_hand(self):
         deck = Deck()
         board = []
+        pot = 0
 
         # deal
         player_hand = deck.draw(2)
@@ -20,28 +21,28 @@ class Game:
         Card.print_pretty_cards(player_hand)
 
         # preflop
-        result, pot = BettingRound(self.player, self.computer).run()
+        result, pot = BettingRound(self.player, self.computer, pot=pot).run()
         if self.handle_fold(result, pot): return
 
         # flop
         board += deck.draw(3)
         print("\n--- FLOP ---")
         Card.print_pretty_cards(board)
-        result, pot = BettingRound(self.player, self.computer).run()
+        result, pot = BettingRound(self.player, self.computer, pot=pot).run()
         if self.handle_fold(result, pot): return
 
         # turn
         board += deck.draw(1)
         print("\n--- TURN ---")
         Card.print_pretty_cards(board)
-        result, pot = BettingRound(self.player, self.computer).run()
+        result, pot = BettingRound(self.player, self.computer, pot=pot).run()
         if self.handle_fold(result, pot): return
 
         # river
         board += deck.draw(1)
         print("\n--- RIVER ---")
         Card.print_pretty_cards(board)
-        result, pot = BettingRound(self.player, self.computer).run()
+        result, pot = BettingRound(self.player, self.computer, pot=pot).run()
         if self.handle_fold(result, pot): return
 
         # showdown
@@ -79,7 +80,7 @@ class Game:
             print("Chop")
 
 if __name__ == "__main__":
-    game = Game(100)
+    game = Game(100.0)
     while True:
         game.play_hand()
         if input("\nPlay again? (y/n): ") != "y":

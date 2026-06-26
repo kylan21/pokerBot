@@ -10,6 +10,6 @@ class Computer:
         else:
             action = random.choice(["fold", "call", "raise"])
 
-        amount = int(pot * 0.5) if action == "raise" else 0
+        amount = round(max(pot * 0.5, 2.5), 1) if action == "raise" else 0
         print(f"Computer: {action}{f' {amount}' if amount else ''}")
         return action, amount
