@@ -9,6 +9,9 @@ class Game:
         self.computer = Computer(stack=starting_stack)
 
     def play_hand(self):
+        if self.player.stack <= 0 or self.computer.stack <= 0:
+            print("Game over")
+            return
         deck = Deck()
         board = []
         pot = 0
@@ -85,5 +88,3 @@ if __name__ == "__main__":
     game = Game(100.0)
     while True:
         game.play_hand()
-        if input("\nPlay again? (y/n): ") != "y":
-            break

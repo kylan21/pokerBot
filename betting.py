@@ -20,7 +20,7 @@ class BettingRound:
 
         while True:
             actor = players[i]
-            to_call = self.current_bet - bets[i]
+            to_call = round(self.current_bet - bets[i], 1)
 
             action, amount = actor.get_action(to_call, self.pot)
 
