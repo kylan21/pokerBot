@@ -24,7 +24,6 @@ class Game:
 
         deck = Deck()
         board = []
-        pot = 0
 
         print(f"\n{'='*40}")
         print(f"Your stack: {self.player.stack} | Computer stack: {self.computer.stack}")
