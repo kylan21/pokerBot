@@ -45,7 +45,7 @@ class Game:
         if self.handle_fold(result, pot): return
 
         # showdown
-        self.showdown(player_hand, computer_hand, board)
+        self.showdown(player_hand, computer_hand, board, pot)
 
     def handle_fold(self, result, pot):
         if result == "player_fold":
@@ -58,7 +58,7 @@ class Game:
             return True
         return False
 
-    def showdown(self, player_hand, computer_hand, board):
+    def showdown(self, player_hand, computer_hand, board, pot):
         evaluator = Evaluator()
         p_score = evaluator.evaluate(board, player_hand)
         c_score = evaluator.evaluate(board, computer_hand)
@@ -67,9 +67,16 @@ class Game:
         print("Your hand:"); Card.print_pretty_cards(player_hand)
         print("Computer hand:"); Card.print_pretty_cards(computer_hand)
 
-        if p_score < c_score: print("You win")
-        elif c_score < p_score: print("Computer wins")
-        else: print("Chop")
+        if p_score < c_score:
+            self.player.stack += pot
+            print("You win")
+        elif c_score < p_score:
+            self.computer.stack += pot
+            print("Computer wins")
+        else:
+            self.player.stack += pot/2
+            self.computer.stack += pot/2
+            print("Chop")
 
 if __name__ == "__main__":
     game = Game(100)
