@@ -13,6 +13,8 @@ class Game:
         board = []
         pot = 0
 
+        print(f"Your stack: {self.player.stack} | Computer stack: {self.computer.stack}")
+
         # deal
         player_hand = deck.draw(2)
         computer_hand = deck.draw(2)
