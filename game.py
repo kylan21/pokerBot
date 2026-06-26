@@ -20,7 +20,7 @@ class Game:
         Card.print_pretty_cards(player_hand)
 
         # preflop
-        result = BettingRound(self.player, self.computer).run()
+        result, pot = BettingRound(self.player, self.computer).run()
         if result == "player_fold": print("You folded"); return
         if result == "computer_fold": print("Computer folded, you win"); return
 
@@ -28,7 +28,7 @@ class Game:
         board += deck.draw(3)
         print("\n--- FLOP ---")
         Card.print_pretty_cards(board)
-        result = BettingRound(self.player, self.computer).run()
+        result, pot = BettingRound(self.player, self.computer).run()
         if result == "player_fold": print("You folded"); return
         if result == "computer_fold": print("Computer folded, you win"); return
 
