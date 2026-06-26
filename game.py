@@ -1,12 +1,10 @@
-from treys import Deck, Card
-from evaluator import Evaluator
+from treys import Deck, Card, Evaluator
 from betting import BettingRound
 from player import Player
 from computer import Computer
 
 class Game:
     def __init__(self, starting_stack):
-        self.evaluator = Evaluator()
         self.player = Player(stack=starting_stack)
         self.computer = Computer(stack=starting_stack)
 
@@ -54,8 +52,9 @@ class Game:
         self.showdown(player_hand, computer_hand, board)
 
     def showdown(self, player_hand, computer_hand, board):
-        p_score = self.evaluator.evaluate(player_hand, board)
-        c_score = self.evaluator.evaluate(computer_hand, board)
+        evaluator = Evaluator()
+        p_score = evaluator.evaluate(board, player_hand)
+        c_score = evaluator.evaluate(board, computer_hand)
 
         print("\n--- SHOWDOWN ---")
         print("Your hand:"); Card.print_pretty_cards(player_hand)
@@ -66,7 +65,7 @@ class Game:
         else: print("Chop")
 
 if __name__ == "__main__":
-    game = Game()
+    game = Game(100)
     while True:
         game.play_hand()
         if input("\nPlay again? (y/n): ") != "y":
