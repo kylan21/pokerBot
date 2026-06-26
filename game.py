@@ -3,22 +3,51 @@ from betting import BettingRound
 from player import Player
 from computer import Computer
 
+SMALL_BLIND = 0.5
+BIG_BLIND = 1.0
+
+def chips(x):
+    """Round to 2 decimal places to avoid float drift."""
+    return round(x, 2)
+
 class Game:
     def __init__(self, starting_stack):
-        self.player = Player(stack=starting_stack)
-        self.computer = Computer(stack=starting_stack)
+        self.player = Player(stack=chips(starting_stack))
+        self.computer = Computer(stack=chips(starting_stack))
+        self.hand_num = 0
 
     def play_hand(self):
         if self.player.stack <= 0 or self.computer.stack <= 0:
             print("Game over")
             return
+
         deck = Deck()
         board = []
         pot = 0
 
+        print(f"\n{'='*40}")
         print(f"Your stack: {self.player.stack} | Computer stack: {self.computer.stack}")
 
-        # deal
+        # post blinds — alternate who is SB
+        if self.hand_num % 2 == 0:
+            sb_player, bb_player = self.player, self.computer
+            sb_name, bb_name = "You", "Computer"
+        else:
+            sb_player, bb_player = self.computer, self.player
+            sb_name, bb_name = "Computer", "You"
+
+        sb = chips(min(SMALL_BLIND, sb_player.stack))
+        bb = chips(min(BIG_BLIND, bb_player.stack))
+
+        sb_player.stack = chips(max(sb_player.stack - sb, 0))
+        bb_player.stack = chips(max(bb_player.stack - bb, 0))
+        pot = chips(sb + bb)
+
+        print(f"\n{sb_name} posts SB: {sb} | {bb_name} posts BB: {bb} | Pot: {pot}")
+
+        player_bet, computer_bet = (sb, bb) if self.hand_num % 2 == 0 else (bb, sb)
+        self.hand_num += 1
+
         player_hand = deck.draw(2)
         computer_hand = deck.draw(2)
 
@@ -26,7 +55,11 @@ class Game:
         Card.print_pretty_cards(player_hand)
 
         # preflop
-        result, pot = BettingRound(self.player, self.computer, pot=pot).run()
+        result, pot = BettingRound(
+            self.player, self.computer, pot=pot,
+            player_bet=player_bet, computer_bet=computer_bet,
+            current_bet=BIG_BLIND
+        ).run()
         if self.handle_fold(result, pot): return
 
         # flop
@@ -50,16 +83,15 @@ class Game:
         result, pot = BettingRound(self.player, self.computer, pot=pot).run()
         if self.handle_fold(result, pot): return
 
-        # showdown
         self.showdown(player_hand, computer_hand, board, pot)
 
     def handle_fold(self, result, pot):
         if result == "player_fold":
-            self.computer.stack += pot
+            self.computer.stack = chips(self.computer.stack + pot)
             print("You folded, computer wins pot")
             return True
         if result == "computer_fold":
-            self.player.stack += pot
+            self.player.stack = chips(self.player.stack + pot)
             print("Computer folded, you win pot")
             return True
         return False
@@ -74,14 +106,15 @@ class Game:
         print("Computer hand:"); Card.print_pretty_cards(computer_hand)
 
         if p_score < c_score:
-            self.player.stack += pot
+            self.player.stack = chips(self.player.stack + pot)
             print("You win")
         elif c_score < p_score:
-            self.computer.stack += pot
+            self.computer.stack = chips(self.computer.stack + pot)
             print("Computer wins")
         else:
-            self.player.stack += pot/2
-            self.computer.stack += pot/2
+            half = chips(pot / 2)
+            self.player.stack = chips(self.player.stack + half)
+            self.computer.stack = chips(self.computer.stack + half)
             print("Chop")
 
 if __name__ == "__main__":
