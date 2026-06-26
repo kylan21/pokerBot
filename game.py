@@ -18,8 +18,9 @@ class Game:
 
     def play_hand(self):
         if self.player.stack <= 0 or self.computer.stack <= 0:
-            print("Game over")
-            return
+            winner = "Computer" if self.player.stack <= 0 else "You"
+            print(f"\nGame over — {winner} win!")
+            return False
 
         deck = Deck()
         board = []
@@ -45,7 +46,15 @@ class Game:
 
         print(f"\n{sb_name} posts SB: {sb} | {bb_name} posts BB: {bb} | Pot: {pot}")
 
-        player_bet, computer_bet = (sb, bb) if self.hand_num % 2 == 0 else (bb, sb)
+        # player=0, computer=1; SB acts first preflop
+        if self.hand_num % 2 == 0:
+            # player is SB
+            player_bet, computer_bet = sb, bb
+            preflop_first_actor = 0
+        else:
+            # computer is SB
+            player_bet, computer_bet = bb, sb
+            preflop_first_actor = 1
         self.hand_num += 1
 
         player_hand = deck.draw(2)
@@ -54,36 +63,37 @@ class Game:
         print("\n--- YOUR HAND ---")
         Card.print_pretty_cards(player_hand)
 
-        # preflop
+        # preflop — SB acts first, BB has option if SB just calls
         result, pot = BettingRound(
             self.player, self.computer, pot=pot,
             player_bet=player_bet, computer_bet=computer_bet,
-            current_bet=BIG_BLIND
+            current_bet=BIG_BLIND, first_actor=preflop_first_actor
         ).run()
-        if self.handle_fold(result, pot): return
+        if self.handle_fold(result, pot): return True
 
         # flop
         board += deck.draw(3)
         print("\n--- FLOP ---")
         Card.print_pretty_cards(board)
         result, pot = BettingRound(self.player, self.computer, pot=pot).run()
-        if self.handle_fold(result, pot): return
+        if self.handle_fold(result, pot): return True
 
         # turn
         board += deck.draw(1)
         print("\n--- TURN ---")
         Card.print_pretty_cards(board)
         result, pot = BettingRound(self.player, self.computer, pot=pot).run()
-        if self.handle_fold(result, pot): return
+        if self.handle_fold(result, pot): return True
 
         # river
         board += deck.draw(1)
         print("\n--- RIVER ---")
         Card.print_pretty_cards(board)
         result, pot = BettingRound(self.player, self.computer, pot=pot).run()
-        if self.handle_fold(result, pot): return
+        if self.handle_fold(result, pot): return True
 
         self.showdown(player_hand, computer_hand, board, pot)
+        return True
 
     def handle_fold(self, result, pot):
         if result == "player_fold":
@@ -119,5 +129,5 @@ class Game:
 
 if __name__ == "__main__":
     game = Game(100.0)
-    while True:
-        game.play_hand()
+    while game.play_hand():
+        pass
