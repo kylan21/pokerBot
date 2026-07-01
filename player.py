@@ -20,7 +20,7 @@ class Player:
 
             if action == "raise":
                 try:
-                    amount = round(float(input("Raise amount: ")), 1)
+                    amount = round(float(input("Raise amount: ")), 2)
                     if amount <= to_call:
                         print(f"Raise must be more than {to_call}")
                         continue

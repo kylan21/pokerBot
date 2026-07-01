@@ -11,6 +11,18 @@ class BettingRound:
         self.computer_bet = chips(computer_bet)
         self.first_actor = first_actor
 
+    def _finish(self, result, bets):
+        """Refund any uncalled excess (e.g. a raise a short-stacked
+        opponent couldn't fully match) back to whoever bet more."""
+        if bets[0] != bets[1]:
+            hi, lo = (0, 1) if bets[0] > bets[1] else (1, 0)
+            excess = chips(bets[hi] - bets[lo])
+            players = [self.player, self.computer]
+            players[hi].stack = chips(players[hi].stack + excess)
+            self.pot = chips(self.pot - excess)
+            bets[hi] = bets[lo]
+        return result, self.pot
+
     def run(self):
         players = [self.player, self.computer]
         bets = [self.player_bet, self.computer_bet]
@@ -31,7 +43,7 @@ class BettingRound:
                 i = 1 - i
                 # if both are all-in or opponent already called, end round
                 if opponent.stack == 0 or bets[0] == bets[1]:
-                    return "continue", self.pot
+                    return self._finish("continue", bets)
                 continue
 
             action, amount = actor.get_action(to_call, self.pot)
@@ -46,7 +58,7 @@ class BettingRound:
                 action = "call"
 
             if action == "fold":
-                return f"{names[i]}_fold", self.pot
+                return self._finish(f"{names[i]}_fold", bets)
 
             elif action == "call":
                 actual_call = chips(min(to_call, actor.stack))
@@ -54,23 +66,43 @@ class BettingRound:
                 self.pot = chips(self.pot + actual_call)
                 actor.stack = chips(max(actor.stack - actual_call, 0))
                 has_acted.add(i)
+
+                # if either side is now (or already was) out of chips,
+                # no further decisions are possible for anyone this round
+                if actor.stack == 0 or opponent.stack == 0:
+                    return self._finish("continue", bets)
+
                 if bets[0] == bets[1] and (1 - i) in has_acted:
-                    return "continue", self.pot
+                    return self._finish("continue", bets)
 
             elif action == "raise":
                 # cap raise to actor's stack
                 actual_raise = chips(min(amount, actor.stack))
-                bets[i] = chips(bets[i] + actual_raise)
-                self.pot = chips(self.pot + actual_raise)
-                actor.stack = chips(max(actor.stack - actual_raise, 0))
-                self.current_bet = bets[i]
-                last_aggressor = i
-                has_acted.add(i)
+                new_bet = chips(bets[i] + actual_raise)
+
+                # a "raise" that wouldn't actually exceed the current bet is
+                # not a valid raise — even if it's the actor's whole stack
+                # (a short all-in that doesn't fully match is just a call).
+                # Never let current_bet go down.
+                if new_bet <= self.current_bet:
+                    actual_call = chips(min(to_call, actor.stack))
+                    bets[i] = chips(bets[i] + actual_call)
+                    self.pot = chips(self.pot + actual_call)
+                    actor.stack = chips(max(actor.stack - actual_call, 0))
+                    has_acted.add(i)
+                    if actor.stack == 0 or opponent.stack == 0 or (bets[0] == bets[1] and (1 - i) in has_acted):
+                        return self._finish("continue", bets)
+                else:
+                    bets[i] = new_bet
+                    self.pot = chips(self.pot + actual_raise)
+                    actor.stack = chips(max(actor.stack - actual_raise, 0))
+                    self.current_bet = new_bet
+                    last_aggressor = i
+                    has_acted.add(i)
 
             elif action == "check":
                 has_acted.add(i)
-                if bets[0] == bets[1] and last_aggressor is None:
-                    if i == 1:
-                        return "continue", self.pot
+                if opponent.stack == 0 or (bets[0] == bets[1] and len(has_acted) == 2):
+                    return self._finish("continue", bets)
 
             i = 1 - i

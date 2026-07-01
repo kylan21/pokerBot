@@ -45,7 +45,7 @@ class Game:
 
         print(f"\n{sb_name} posts SB: {sb} | {bb_name} posts BB: {bb} | Pot: {pot}")
 
-        # player=0, computer=1; SB acts first preflop
+        # player=0, computer=1; SB acts first preflop, BB acts first postflop
         if self.hand_num % 2 == 0:
             # player is SB
             player_bet, computer_bet = sb, bb
@@ -54,6 +54,7 @@ class Game:
             # computer is SB
             player_bet, computer_bet = bb, sb
             preflop_first_actor = 1
+        postflop_first_actor = 1 - preflop_first_actor
         self.hand_num += 1
 
         player_hand = deck.draw(2)
@@ -66,7 +67,7 @@ class Game:
         result, pot = BettingRound(
             self.player, self.computer, pot=pot,
             player_bet=player_bet, computer_bet=computer_bet,
-            current_bet=BIG_BLIND, first_actor=preflop_first_actor
+            current_bet=max(sb, bb), first_actor=preflop_first_actor
         ).run()
         if self.handle_fold(result, pot): return True
 
@@ -74,21 +75,21 @@ class Game:
         board += deck.draw(3)
         print("\n--- FLOP ---")
         Card.print_pretty_cards(board)
-        result, pot = BettingRound(self.player, self.computer, pot=pot).run()
+        result, pot = BettingRound(self.player, self.computer, pot=pot, first_actor=postflop_first_actor).run()
         if self.handle_fold(result, pot): return True
 
         # turn
         board += deck.draw(1)
         print("\n--- TURN ---")
         Card.print_pretty_cards(board)
-        result, pot = BettingRound(self.player, self.computer, pot=pot).run()
+        result, pot = BettingRound(self.player, self.computer, pot=pot, first_actor=postflop_first_actor).run()
         if self.handle_fold(result, pot): return True
 
         # river
         board += deck.draw(1)
         print("\n--- RIVER ---")
         Card.print_pretty_cards(board)
-        result, pot = BettingRound(self.player, self.computer, pot=pot).run()
+        result, pot = BettingRound(self.player, self.computer, pot=pot, first_actor=postflop_first_actor).run()
         if self.handle_fold(result, pot): return True
 
         self.showdown(player_hand, computer_hand, board, pot)
